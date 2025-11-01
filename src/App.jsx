@@ -1,13 +1,37 @@
 
 import './index.css'
-function App() {
-  
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './web/user/HomePage';
+import StorePage from './web/user/StorePage';
+import DashboardLayout from './web/admin/layouts/DashboardLayout';
+import DashboardHome from './web/admin/pages/DashboardHome';
+import ProductPage from './web/admin/pages/ProductPage/ProductPage';
+import CategoryPage from './web/admin/pages/CategoryPage/CategoryPage';
+import SubCategoryPage from './web/admin/pages/SubCategoryPage/SubCategoryPage';
+import VendorPage from './web/admin/pages/Vendor/VendorPage';
+import RiderListPage from './web/admin/pages/RiderListPage/RiderListPage';
 
+
+function App() {
   return (
-    <div className="p-3 mb-4 bg-green-100 text-green-700 rounded-md">
-     you! Your message has been sent successfully.
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/stores" element={<StorePage/>} /> 
+
+        <Route path="/admin" element={<DashboardLayout />}>
+          <Route index element={<DashboardHome />} />
+          <Route path="product" element={<ProductPage />} />
+          <Route path="category" element={<CategoryPage />} />
+          <Route path="subcategory" element={<SubCategoryPage />} />
+          <Route path="vendor" element={<VendorPage/>} />
+          <Route path="rider-list" element={<RiderListPage/>}/>
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+
+  
 }
 
-export default App
+export default App;
