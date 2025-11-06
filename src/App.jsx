@@ -10,6 +10,7 @@ import CategoryPage from './web/admin/pages/CategoryPage/CategoryPage';
 import SubCategoryPage from './web/admin/pages/SubCategoryPage/SubCategoryPage';
 import VendorPage from './web/admin/pages/Vendor/VendorPage';
 import RiderListPage from './web/admin/pages/RiderListPage/RiderListPage';
+import AgentPage from './web/admin/pages/Agent/AgentPage';
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
           <Route path="category" element={<CategoryPage />} />
           <Route path="subcategory" element={<SubCategoryPage />} />
           <Route path="vendor" element={<VendorPage/>} />
+          <Route path="agent" element={<AgentPage/>}/>
           <Route path="rider-list" element={<RiderListPage/>}/>
         </Route>
       </Routes>

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { FiEdit2, FiTrash2, FiCheck, FiX } from "react-icons/fi";
 export default function CategoryTable() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [categories, setCategories] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", imageUrl: null });
   // Fetch categories from backend
   useEffect(() => {
-    fetch("http://192.168.29.222:5000/api/admin/categories")
+    fetch(`${API_BASE_URL}/api/admin/categories`)
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.error("Error fetching categories:", err));
@@ -15,7 +16,7 @@ export default function CategoryTable() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this category?")) return;
     try {
-      const res = await fetch(`http://192.168.29.222:5000/api/admin/categories/delete/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/categories/delete/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -44,7 +45,7 @@ export default function CategoryTable() {
     formData.append("name", editForm.name);
     if (editForm.imageUrl) formData.append("image", editForm.imageUrl);
     try {
-      const res = await fetch(`http://192.168.29.222:5000/api/admin/categories/update/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/categories/update/${id}`, {
         method: "PUT",
         body: formData,
       });
@@ -93,7 +94,7 @@ export default function CategoryTable() {
                     />
                   ) : (
                     <img
-                      src={`http://192.168.29.222:5000${cat.imageUrl}`}
+                      src={`${API_BASE_URL}${cat.imageUrl}`}
                       alt={cat.name}
                       className="w-12 h-12 object-cover rounded-md border border-gray-700"
                     />

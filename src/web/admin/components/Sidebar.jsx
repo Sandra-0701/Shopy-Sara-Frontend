@@ -85,6 +85,11 @@ export default function Sidebar() {
                   <span>Subcategory</span>
                 </NavLink>
 
+                <NavLink to="/admin/agent" className={({ isActive }) => `${linkBase} ${isActive ? activeLink : ""}`}>
+                  <FiTruck />
+                  <span>Agent</span>
+                </NavLink>
+
                 <NavLink to="/admin/vendor" className={({ isActive }) => `${linkBase} ${isActive ? activeLink : ""}`}>
                   <FiTruck />
                   <span>Vendor</span>

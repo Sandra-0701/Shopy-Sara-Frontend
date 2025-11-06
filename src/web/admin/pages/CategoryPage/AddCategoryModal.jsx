@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FiX, FiUpload, FiTag } from "react-icons/fi";
 
 export default function AddCategoryModal({ closeModal }) {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -64,12 +65,12 @@ export default function AddCategoryModal({ closeModal }) {
       console.log("📤 Sending:", Object.fromEntries(formDataToSend));
 
       const response = await fetch(
-        "http://192.168.29.222:5000/api/admin/categories/add",
-        {
-          method: "POST",
-          body: formDataToSend,
-        }
-      );
+  `${API_BASE_URL}/api/admin/categories/add`,
+  {
+    method: "POST",
+    body: formDataToSend,
+  }
+);
 
       const data = await response.json();
       

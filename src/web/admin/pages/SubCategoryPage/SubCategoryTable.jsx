@@ -1,25 +1,29 @@
 import { useState, useEffect } from "react";
 import { FiEdit2, FiTrash2, FiCheck, FiX } from "react-icons/fi";
-export default function CategoryTable() {
+
+export default function SubCategoryTable() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [categories, setCategories] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", imageUrl: null });
+  const [editForm, setEditForm] = useState({ name: "", image: null });
+  const [imagePreview, setImagePreview] = useState(null);
+
   // Fetch categories from backend
   useEffect(() => {
-    fetch("http://192.168.29.222:5000/api/admin/subcategories")
+    fetch(`${API_BASE_URL}/api/admin/categories`)
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.error("Error fetching categories:", err));
   }, []);
+
   // DELETE category
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this category?")) return;
     try {
-      const res = await fetch(`http://192.168.29.222:5000/api/admin/categories/delete/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/categories/delete/${id}`, {
         method: "DELETE",
       });
 
-      
       if (res.ok) {
         setCategories(categories.filter((c) => c._id !== id));
         alert("✅ Category deleted successfully!");
@@ -30,45 +34,70 @@ export default function CategoryTable() {
       console.error("Error deleting:", err);
     }
   };
-  // ✅ Enable edit mode
+
+  // Enable edit mode
   const handleEdit = (category) => {
     setEditingId(category._id);
-    setEditForm({ name: category.name, imageUrl: null });
+    setEditForm({ name: category.name, image: null });
+    setImagePreview(category.imageUrl ? `${API_BASE_URL}${category.imageUrl}` : null);
   };
-  // ❌ Cancel edit
+
+  // Cancel edit
   const handleCancelEdit = () => {
     setEditingId(null);
-    setEditForm({ name: "", imageUrl: null });
+    setEditForm({ name: "", image: null });
+    setImagePreview(null);
   };
-  // ✅ Handle submit (PUT API)
+
+  // Handle image change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditForm({ ...editForm, image: file });
+      
+      // Create preview for the new image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle submit (PUT API)
   const handleUpdate = async (id) => {
     const formData = new FormData();
     formData.append("name", editForm.name);
-    if (editForm.imageUrl) formData.append("image", editForm.imageUrl);
+    if (editForm.image) formData.append("image", editForm.image);
+
     try {
-      const res = await fetch(`http://192.168.29.222:5000/api/admin/categories/update/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/categories/update/${id}`, {
         method: "PUT",
         body: formData,
       });
       const data = await res.json();
+      
       if (res.ok) {
+        // Update the categories state with the updated data from the server
         setCategories((prev) =>
           prev.map((cat) =>
             cat._id === id
-              ? { ...cat, name: editForm.name, imageUrl: editForm.imageUrl ? URL.createObjectURL(editForm.imageUrl) : cat.imageUrl }
+              ? { ...cat, name: editForm.name, imageUrl: data.imageUrl || cat.imageUrl }
               : cat
           )
         );
         alert("✅ Category updated successfully!");
         setEditingId(null);
+        setImagePreview(null);
       } else {
-        alert("❌ " + data.message);
+        alert("❌ " + (data.message || "Failed to update category"));
       }
     } catch (err) {
       console.error("Error updating category:", err);
       alert("⚠️ Something went wrong!");
     }
   };
+
   return (
     <div className="bg-gray-900 rounded-lg shadow-lg border border-gray-800 p-6">
       <h2 className="text-xl font-semibold text-white mb-6">Category Table</h2>
@@ -84,24 +113,44 @@ export default function CategoryTable() {
           <tbody>
             {categories.map((cat) => (
               <tr key={cat._id} className="border-b border-gray-800 hover:bg-gray-800">
-                {/* 🖼 Image column */}
+                {/* Image column */}
                 <td className="py-3 px-4 text-gray-300">
                   {editingId === cat._id ? (
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.files[0] })}
-                      className="text-gray-300 text-sm"
-                    />
+                    <div className="flex items-center gap-2">
+                      <div className="w-12 h-12 bg-gray-800 rounded-md overflow-hidden border border-gray-700 flex items-center justify-center">
+                        {imagePreview ? (
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-500 text-xs">No image</span>
+                        )}
+                      </div>
+                      <label className="text-yellow-500 cursor-pointer text-sm">
+                        Change
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
                   ) : (
                     <img
-                      src={`http://192.168.29.222:5000${cat.imageUrl}`}
+                      src={`${API_BASE_URL}${cat.imageUrl}`}
                       alt={cat.name}
                       className="w-12 h-12 object-cover rounded-md border border-gray-700"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://via.placeholder.com/48x48?text=No+Image";
+                      }}
                     />
                   )}
                 </td>
-                {/* ✏️ Name column */}
+                {/* Name column */}
                 <td className="py-3 px-4 text-white">
                   {editingId === cat._id ? (
                     <input
@@ -114,12 +163,12 @@ export default function CategoryTable() {
                     cat.name
                   )}
                 </td>
-                {/* ⚙️ Actions column */}
+                {/* Actions column */}
                 <td className="py-3 px-4">
                   <div className="flex gap-2">
                     {editingId === cat._id ? (
                       <>
-                        {/* ✅ Save */}
+                        {/* Save */}
                         <button
                           onClick={() => handleUpdate(cat._id)}
                           className="p-1 text-green-500 hover:text-green-400 transition-colors"
@@ -127,7 +176,7 @@ export default function CategoryTable() {
                         >
                           <FiCheck />
                         </button>
-                        {/* ❌ Cancel */}
+                        {/* Cancel */}
                         <button
                           onClick={handleCancelEdit}
                           className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -138,7 +187,7 @@ export default function CategoryTable() {
                       </>
                     ) : (
                       <>
-                        {/* 🖋 Edit */}
+                        {/* Edit */}
                         <button
                           onClick={() => handleEdit(cat)}
                           className="p-1 text-gray-400 hover:text-yellow-500 transition-colors"
@@ -146,7 +195,7 @@ export default function CategoryTable() {
                         >
                           <FiEdit2 />
                         </button>
-                        {/* 🗑 Delete */}
+                        {/* Delete */}
                         <button
                           onClick={() => handleDelete(cat._id)}
                           className="p-1 text-gray-400 hover:text-red-500 transition-colors"
