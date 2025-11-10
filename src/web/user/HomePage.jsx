@@ -132,7 +132,7 @@ function HomePage() {
           </div>
           <div className="bg-yellow-100 text-purple-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-md transform transition-transform hover:scale-105">
             <FiZap className="text-yellow-600" />
-            Delivery in 30 minutes
+            Delivery in 40 minutes
           </div>
         </header>
 
