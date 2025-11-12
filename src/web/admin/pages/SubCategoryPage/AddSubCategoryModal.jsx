@@ -1,23 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiX, FiUpload, FiTag } from "react-icons/fi";
 
 export default function AddSubCategoryModal({ closeModal }) {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
-    status: true,
+    category: "",
     image: null,
   });
 
+  const [categories, setCategories] = useState([]);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
 
+  // Fetch categories when component mounts
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/subcategories/categories`);
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, [API_BASE_URL]);
+
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
 
     // Clear field-specific errors while typing
@@ -40,18 +57,15 @@ export default function AddSubCategoryModal({ closeModal }) {
     }
   };
 
-
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) newErrors.name = "SubCategory name is required";
-    if (!formData.description.trim())
-      newErrors.description = "Description is required";
+    if (!formData.category) newErrors.category = "Category selection is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,12 +75,28 @@ export default function AddSubCategoryModal({ closeModal }) {
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Prepare form data
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("category", formData.category);
+      if (formData.image) formDataToSend.append("image", formData.image);
 
-      console.log("Add Sub Category:", formData);
-      closeModal();
+      const response = await fetch(`${API_BASE_URL}/api/admin/subcategories/add`, {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Subcategory added successfully!");
+        closeModal();
+      } else {
+        alert("❌ Error: " + (data.message || "Failed to add subcategory"));
+      }
     } catch (error) {
-      console.error("Error adding Sub category:", error);
+      console.error("Error adding subcategory:", error);
+      alert("⚠️ Something went wrong while adding the subcategory!");
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +126,7 @@ export default function AddSubCategoryModal({ closeModal }) {
               <input
                 type="text"
                 name="name"
-                placeholder="Enter Sub category name"
+                placeholder="Enter subcategory name"
                 value={formData.name}
                 onChange={handleInputChange}
                 className={`w-full bg-gray-800/50 text-white border rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-yellow-500 ${
@@ -109,39 +139,27 @@ export default function AddSubCategoryModal({ closeModal }) {
             )}
           </div>
 
-          {/* Description */}
+          {/* Category Selection */}
           <div>
-            <label className="block text-gray-400 mb-2">Description</label>
-            <textarea
-              name="description"
-              placeholder="Enter Sub category description"
-              value={formData.description}
+            <label className="block text-gray-400 mb-2">Parent Category</label>
+            <select
+              name="category"
+              value={formData.category}
               onChange={handleInputChange}
-              rows="4"
-              className={`w-full bg-gray-800/50 text-white border rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500 resize-none ${
-                errors.description ? "border-red-500" : "border-gray-700"
+              className={`w-full bg-gray-800/50 text-white border rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500 ${
+                errors.category ? "border-red-500" : "border-gray-700"
               }`}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.description}
-              </p>
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            {errors.category && (
+              <p className="text-red-500 text-sm mt-1">{errors.category}</p>
             )}
-          </div>
-
-          {/* Status */}
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="status"
-              id="status"
-              checked={formData.status}
-              onChange={handleInputChange}
-              className="w-4 h-4 text-yellow-500 bg-gray-800 border-gray-600 rounded focus:ring-yellow-500 focus:ring-2"
-            />
-            <label htmlFor="status" className="ml-2 text-gray-400">
-              Active (sub category will be visible)
-            </label>
           </div>
 
           {/* Image Upload */}
